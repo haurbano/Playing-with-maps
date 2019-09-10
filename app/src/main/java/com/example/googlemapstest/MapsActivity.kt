@@ -1,5 +1,6 @@
 package com.example.googlemapstest
 
+import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.googlemapstest.mvp.MapActivityContract
@@ -11,11 +12,12 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
 import org.koin.android.ext.android.inject
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapActivityContract.View {
 
-    val presenter: MapActivityContract.Presenter by inject()
+    private val presenter: MapActivityContract.Presenter by inject()
 
     private lateinit var mapView: GoogleMap
 
@@ -42,5 +44,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapActivityContrac
     override fun onMapReady(googleMap: GoogleMap) {
         mapView = googleMap
         presenter.showMarkers()
+        presenter.showRoute()
+    }
+
+    override fun showRoute(points: List<LatLng>) {
+        val polylineOptions = PolylineOptions()
+        polylineOptions.addAll(points)
+        mapView.addPolyline(polylineOptions)
     }
 }
