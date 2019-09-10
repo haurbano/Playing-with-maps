@@ -1,23 +1,26 @@
 package com.example.googlemapstest
 
-import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.googlemapstest.mvp.MapActivityContract
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import org.koin.android.ext.android.inject
+import androidx.core.app.ActivityCompat
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.*
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapActivityContract.View {
 
+    val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 10
+
     private val presenter: MapActivityContract.Presenter by inject()
+    private var locationPermissionGranted = false
 
     private lateinit var mapView: GoogleMap
 
@@ -52,4 +55,58 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, MapActivityContrac
         polylineOptions.addAll(points)
         mapView.addPolyline(polylineOptions)
     }
+
+    override fun onResume() {
+        super.onResume()
+        getLocationPermission()
+    }
+
+    private fun getLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this.applicationContext,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            locationPermissionGranted = true
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        locationPermissionGranted = false
+        when (requestCode) {
+            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] === PackageManager.PERMISSION_GRANTED) {
+                    locationPermissionGranted = true
+                    listenLocationChanges()
+                }
+            }
+        }
+    }
+
+    private fun listenLocationChanges() {
+        if (mapView == null) return
+        if(locationPermissionGranted) {
+            mapView.isMyLocationEnabled = true
+            listenAndUpdateLocation()
+        }
+    }
+
+    private fun listenAndUpdateLocation() {
+
+    }
+
+    private fun updateLocationonUI() {
+
+    }
+
 }
